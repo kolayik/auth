@@ -28,6 +28,6 @@ class CreateAuthtokenTable extends Migration
      */
     public function down()
     {
-        Schema::drop('sessions');
+        Schema::drop('authtoken');
     }
 }
