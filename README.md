@@ -43,7 +43,69 @@ Storage - KOLAY_AUTH_DRIVER
 
     KOLAY_AUTH_TTL:1440
 
+### Quick Start
+How do generate a custom token ?
 
+    use KolayIK\Auth\Facades\KolayAuth;
+    
+    class AuthenticateController extends Controller
+    {
+        public function authenticate(Request $request)
+        {
+            // your add custom login code
+            $userId = "kolayik";
+            
+            return response()->json(KolayAuth::generate($userId));
+        }
+    }
+    
+How do authenticate via token in custom middleware ?
+        
+        namespace App\Http\Middleware;
+        use KolayIK\Auth\Facades\KolayAuth;
+        
+        class CustomAuth
+        {
+            public function handle($request, Closure $next)
+            {   
+                $token = KolayAuth::authenticate();
+    
+                if ($token->isExpired()) {
+                    throw new \Exception('Session expired!');
+                }
+    
+                return $next($request);
+            }
+        }
+        
+### Authentication
+To make authenticated requests via http using the built in methods, you will need to set an authorization header as follows:
+    
+    Authorization: Bearer {yourtoken}
+    
+**Note to Apache users**
+
+Apache seems to discard the Authorization header if it is not a base64 encoded user/pass combo. So to fix this you can add the following to your apache config
+
+    RewriteEngine On
+    RewriteCond %{HTTP:Authorization} ^(.*)
+    RewriteRule .* - [e=HTTP_AUTHORIZATION:%1]
+    
+Alternatively you can include the token `via a query string`
+
+    http://api.mysite.com/me?authorization_key={yourtoken}
+    
+To get the token from the request you can do:
+
+    $token = KolayAuth::getToken();
+
+**Middleware**
+
+You can use `kolay.auth` middleware:
+    
+    Route::group(['prefix' => '/api/v1', 'middleware' => 'kolay.auth'], function () {
+        //your code
+    });
 ## License
 
 The MIT License (MIT)
