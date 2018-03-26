@@ -72,6 +72,6 @@ class Cache extends DriverAbstract implements DriverInterface
      */
     public function invalidate($token)
     {
-        $this->getCache()->destroy($token);
+        return $this->getCache()->destroy($token);
     }
 }
