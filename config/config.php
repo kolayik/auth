@@ -9,6 +9,7 @@ return [
      * Minutes
      */
     'ttl' => env('KOLAY_AUTH_TTL', 1440),
+    'refreshTtl' => env('KOLAY_AUTH_REFRESH_TTL', 20160),
     /**
      * Do not change
      */

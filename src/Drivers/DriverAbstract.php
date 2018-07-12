@@ -10,6 +10,7 @@ class DriverAbstract
     private $cache;
 
     protected $ttl = null;
+    protected $refreshTtl = null;
 
     /**
      * @return mixed
@@ -60,6 +61,25 @@ class DriverAbstract
             return $this->ttl;
         }
         return $this->getConfig()['ttl'];
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getRefreshTTL()
+    {
+        if (!empty($this->refreshTtl)) {
+            return $this->refreshTtl;
+        }
+        return $this->getConfig()['refreshTtl'];
+    }
+
+    /**
+     * @param $ttl
+     */
+    public function setRefreshTTL($refreshTtl)
+    {
+        $this->refreshTtl = $refreshTtl;
     }
 
     protected function generateToken($length = 32)

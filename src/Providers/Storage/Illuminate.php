@@ -18,7 +18,8 @@ class Illuminate implements StorageInterface
      *
      * @var string
      */
-    protected $prefix = 'kolayik.kolayauth.';
+    const TOKEN_PREFIX = 'kolayik.kolayauth.';
+    const REFRESH_TOKEN_PREFIX = 'kolayik.kolayauth.refresh.';
 
     /**
      * Illuminate constructor.
@@ -38,9 +39,9 @@ class Illuminate implements StorageInterface
      *
      * @return void
      */
-    public function add($key, $value, $minutes)
+    public function add($prefix, $key, $value, $minutes)
     {
-        $this->cache()->put($this->prefix . $key, $value, $minutes);
+        $this->cache()->put($prefix . $key, $value, $minutes);
     }
 
     /**
@@ -53,7 +54,7 @@ class Illuminate implements StorageInterface
      */
     public function forever($key, $value)
     {
-        $this->cache()->forever($this->prefix . $key, $value);
+        $this->cache()->forever(self::TOKEN_PREFIX . $key, $value);
     }
 
     /**
@@ -63,9 +64,9 @@ class Illuminate implements StorageInterface
      *
      * @return mixed
      */
-    public function get($key)
+    public function get($prefix, $key)
     {
-        return $this->cache()->get($this->prefix . $key);
+        return $this->cache()->get($prefix . $key);
     }
 
     /**
@@ -77,7 +78,7 @@ class Illuminate implements StorageInterface
      */
     public function destroy($key)
     {
-        return $this->cache()->forget($this->prefix . $key);
+        return $this->cache()->forget(self::TOKEN_PREFIX . $key);
     }
 
     /**
