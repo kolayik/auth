@@ -4,6 +4,8 @@ namespace KolayIK\Auth\Drivers;
 
 use Carbon\Carbon;
 use KolayIK\Auth\Entity\AuthToken;
+use KolayIK\Auth\Entity\RefreshToken;
+use KolayIK\Auth\Providers\Storage\Illuminate;
 use KolayIK\Auth\Exceptions\KolayAuthException;
 use KolayIK\Auth\Exceptions\TokenInvalidException;
 
@@ -19,8 +21,23 @@ class Cache extends DriverAbstract implements DriverInterface
         if (empty($data)) {
             throw new KolayAuthException('Data can not be empty');
         }
-        $this->getCache()->add($data->getToken(), $data, $this->getTTL());
+        $this->getCache()->add(Illuminate::TOKEN_PREFIX, $data->getToken(), $data, $this->getTTL());
 
+        return $data;
+    }
+
+    /**
+     * @param RefreshToken $data
+     * @return bool|RefreshToken
+     * @throws \Exception
+     */
+    private function _saveRefreshToken(RefreshToken $data)
+    {
+        if (empty($data)) {
+            throw new KolayAuthException('Data can not be empty');
+        }
+        $this->getCache()->add(Illuminate::REFRESH_TOKEN_PREFIX, $data->getRefreshToken(), $data, $this->getRefreshTTL());
+ 
         return $data;
     }
 
@@ -30,7 +47,16 @@ class Cache extends DriverAbstract implements DriverInterface
      */
     private function _get($token)
     {
-        return $this->getCache()->get($token);
+        return $this->getCache()->get(Illuminate::TOKEN_PREFIX, $token);
+    }
+
+    /**
+     * @param $token
+     * @return bool|AuthToken
+     */
+    private function _getRefreshToken($refreshToken)
+    {
+        return $this->getCache()->get(Illuminate::REFRESH_TOKEN_PREFIX, $refreshToken);
     }
 
     /**
@@ -64,6 +90,46 @@ class Cache extends DriverAbstract implements DriverInterface
         $authToken->setUpdatedAt($now);
 
         return $this->_save($authToken);
+    }
+
+    /**
+     * @param $userId
+     * @return bool|RefreshToken
+     */
+    public function generateRefreshToken($userId)
+    {
+        $refreshToken = new RefreshToken();
+        $refreshToken->setRefreshToken(parent::generateToken());
+        $refreshToken->setIpAddress(\Request::ip());
+        $refreshToken->setUserId($userId);
+
+        $now = Carbon::now();
+        $expirationDate = clone $now;
+        $refreshToken->setExpirationDate($expirationDate->addMinutes($this->getRefreshTTL()));
+        $refreshToken->setCreatedAt($now);
+        $refreshToken->setUpdatedAt($now);
+
+        return $this->_saveRefreshToken($refreshToken);
+    }
+
+    /**
+     * @param $clientRefreshToken
+     * @return bool|AuthToken
+     * @throws \Exception
+     */
+    public function refresh($clientRefreshToken)
+    {
+        $validRefreshToken = $this->_getRefreshToken($clientRefreshToken);
+
+        if (
+            empty($validRefreshToken) ||
+            $validRefreshToken->isExpired() ||
+            ($validRefreshToken->getIpAddress() != \Request::ip())
+        ) {
+            throw new KolayAuthException('Invalid login information, please log in again.', 401);
+        }
+
+        return $this->generate($validRefreshToken->getUserId());
     }
 
     /**

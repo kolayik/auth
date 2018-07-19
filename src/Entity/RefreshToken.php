@@ -4,46 +4,29 @@ namespace KolayIK\Auth\Entity;
 
 use Carbon\Carbon;
 
-class AuthToken
+class RefreshToken
 {
-    private $token;
-    private $userId;
+    private $refreshToken;
     private $ipAddress;
+    private $userId;
     private $expirationDate;
     private $createdAt;
     private $updatedAt;
 
-
     /**
      * @return string
      */
-    public function getToken()
+    public function getRefreshToken()
     {
-        return $this->token;
+        return $this->refreshToken;
     }
 
     /**
-     * @param string $token
+     * @param string $refreshToken
      */
-    public function setToken($token)
+    public function setRefreshToken($refreshToken)
     {
-        $this->token = $token;
-    }
-
-    /**
-     * @return string
-     */
-    public function getUserId()
-    {
-        return $this->userId;
-    }
-
-    /**
-     * @param string $userId
-     */
-    public function setUserId($userId)
-    {
-        $this->userId = $userId;
+        $this->refreshToken = $refreshToken;
     }
 
     /**
@@ -61,6 +44,23 @@ class AuthToken
     {
         $this->ipAddress = $ipAddress;
     }
+
+    /**
+     * @return string
+     */
+    public function getUserId()
+    {
+        return $this->userId;
+    }
+
+    /**
+     * @param string $userId
+     */
+    public function setUserId($userId)
+    {
+        $this->userId = $userId;
+    }
+    
 
     /**
      * @return Carbon

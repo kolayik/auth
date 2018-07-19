@@ -15,8 +15,9 @@ class CreateAuthtokenTable extends Migration
         Schema::create('authtoken', function(Blueprint $table)
         {
             $table->string('token')->unique();
+            $table->string('ip_address');
+            $table->string('user_id');
             $table->dateTime('expiration_date');
-            $table->dateTime('user_id');
             $table->timestamps();
         });
     }

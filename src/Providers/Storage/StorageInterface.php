@@ -11,7 +11,7 @@ interface StorageInterface
      *
      * @return void
      */
-    public function add($key, $value, $minutes);
+    public function add($prefix, $key, $value, $minutes);
 
     /**
      * @param  string $key
@@ -26,7 +26,7 @@ interface StorageInterface
      *
      * @return mixed
      */
-    public function get($key);
+    public function get($prefix, $key);
 
     /**
      * @param  string $key

@@ -13,4 +13,6 @@ interface DriverInterface
     public function setCache($cache);
     public function getTTL();
     public function setTTL($ttl);
+    public function getRefreshTTL();
+    public function setRefreshTTL($refreshTtl);
 }

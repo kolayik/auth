@@ -13,6 +13,7 @@ class Authorizer
     public $parser;
 
     public $token = null;
+    public $refreshToken = null;
 
     public function __construct($config, Parser $parser, DriverInterface $driver)
     {
@@ -27,7 +28,10 @@ class Authorizer
      */
     public function generate($userId)
     {
-        return $this->driver->generate($userId);
+        return [
+            "authToken" => $this->driver->generate($userId),
+            "refreshToken" => $this->driver->generateRefreshToken($userId)->getRefreshToken()
+        ];
     }
 
     /**
@@ -56,6 +60,15 @@ class Authorizer
         $token = $this->getToken();
         $tokenObject = $this->driver->get($token);
         return $tokenObject;
+    }
+
+    /**
+     * Refresh the token
+     */
+    public function refresh()
+    {
+        $clientRefreshToken = $this->getToken();
+        return $this->driver->refresh($clientRefreshToken);
     }
 
     /**

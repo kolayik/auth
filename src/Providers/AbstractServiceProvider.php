@@ -7,6 +7,7 @@ use Illuminate\Support\ServiceProvider;
 use KolayIK\Auth\Authorizer;
 use KolayIK\Auth\Drivers\DriverInterface;
 use KolayIK\Auth\Http\Middleware\Authenticate;
+use KolayIK\Auth\Http\Middleware\RefreshToken;
 use KolayIK\Auth\Http\Parser\AuthHeaders;
 use KolayIK\Auth\Http\Parser\Cookies;
 use KolayIK\Auth\Http\Parser\InputSource;
@@ -24,7 +25,8 @@ abstract class AbstractServiceProvider extends ServiceProvider
      * @var array
      */
     protected $middlewareAliases = [
-        'kolay.auth' => Authenticate::class
+        'kolay.auth' => Authenticate::class,
+        'kolay.refresh' => RefreshToken::class
     ];
 
     /**

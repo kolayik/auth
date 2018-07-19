@@ -33,6 +33,15 @@ class KolayAuth
     }
 
     /**
+     * @param $refreshToken
+     * @return AuthToken
+     */
+    public static function refresh()
+    {
+        return \KolayIK\Auth\Facades\Authorizer::refresh();
+    }
+
+    /**
      * @return bool
      */
     public static function invalidate()
