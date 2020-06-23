@@ -6,10 +6,10 @@ return [
      */
     'driver' => env('KOLAY_AUTH_DRIVER', 'cache'),
     /**
-     * Minutes
+     * Seconds
      */
-    'ttl' => env('KOLAY_AUTH_TTL', 1440),
-    'refreshTtl' => env('KOLAY_AUTH_REFRESH_TTL', 20160),
+    'ttl' => env('KOLAY_AUTH_TTL', 60 * 1440),
+    'refreshTtl' => env('KOLAY_AUTH_REFRESH_TTL', 60 * 20160),
     /**
      * Do not change
      */
