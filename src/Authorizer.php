@@ -24,9 +24,9 @@ class Authorizer
 
     /**
      * @param $userId
-     * @return AuthToken
+     * @return array
      */
-    public function generate($userId)
+    public function generate($userId): array
     {
         return [
             "authToken" => $this->driver->generate($userId),

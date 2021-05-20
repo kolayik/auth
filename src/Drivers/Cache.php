@@ -3,20 +3,26 @@
 namespace KolayIK\Auth\Drivers;
 
 use Carbon\Carbon;
+use Exception;
 use KolayIK\Auth\Entity\AuthToken;
 use KolayIK\Auth\Entity\RefreshToken;
 use KolayIK\Auth\Providers\Storage\Illuminate;
 use KolayIK\Auth\Exceptions\KolayAuthException;
 use KolayIK\Auth\Exceptions\TokenInvalidException;
 
-class Cache extends DriverAbstract implements DriverInterface
+/**
+ * Class Cache
+ *
+ * @package KolayIK\Auth\Drivers
+ */
+class Cache extends DriverAbstract
 {
     /**
      * @param AuthToken $data
-     * @return bool|AuthToken
-     * @throws \Exception
+     * @return AuthToken
+     * @throws Exception
      */
-    private function _save(AuthToken $data)
+    private function _save(AuthToken $data): AuthToken
     {
         if (empty($data)) {
             throw new KolayAuthException('Data can not be empty');
@@ -28,16 +34,17 @@ class Cache extends DriverAbstract implements DriverInterface
 
     /**
      * @param RefreshToken $data
-     * @return bool|RefreshToken
-     * @throws \Exception
+     * @return RefreshToken
+     * @throws Exception
      */
-    private function _saveRefreshToken(RefreshToken $data)
+    public function saveRefreshToken(RefreshToken $data): RefreshToken
     {
         if (empty($data)) {
             throw new KolayAuthException('Data can not be empty');
         }
+
         $this->getCache()->add(Illuminate::REFRESH_TOKEN_PREFIX, $data->getRefreshToken(), $data, $this->getRefreshTTL());
- 
+
         return $data;
     }
 
@@ -51,7 +58,7 @@ class Cache extends DriverAbstract implements DriverInterface
     }
 
     /**
-     * @param $token
+     * @param $refreshToken
      * @return bool|AuthToken
      */
     private function _getRefreshToken($refreshToken)
@@ -62,22 +69,24 @@ class Cache extends DriverAbstract implements DriverInterface
     /**
      * @param $token
      * @return AuthToken
-     * @throws \Exception
+     * @throws Exception
      */
-    public function get($token)
+    public function get($token): AuthToken
     {
         $data = $this->_get($token);
-        if (!$data instanceof AuthToken || empty($data)) {
+        if (! $data instanceof AuthToken || empty($data)) {
             throw new TokenInvalidException('Token not found!');
         }
+
         return $data;
     }
 
     /**
      * @param $userId
-     * @return bool|AuthToken
+     * @return AuthToken
+     * @throws Exception
      */
-    public function generate($userId)
+    public function generate($userId): AuthToken
     {
         $authToken = new AuthToken();
         $authToken->setUserId($userId);
@@ -93,39 +102,15 @@ class Cache extends DriverAbstract implements DriverInterface
     }
 
     /**
-     * @param $userId
-     * @return bool|RefreshToken
-     */
-    public function generateRefreshToken($userId)
-    {
-        $refreshToken = new RefreshToken();
-        $refreshToken->setRefreshToken(parent::generateToken());
-        $refreshToken->setIpAddress(\Request::ip());
-        $refreshToken->setUserId($userId);
-
-        $now = Carbon::now();
-        $expirationDate = clone $now;
-        $refreshToken->setExpirationDate($expirationDate->addMinutes($this->getRefreshTTL()));
-        $refreshToken->setCreatedAt($now);
-        $refreshToken->setUpdatedAt($now);
-
-        return $this->_saveRefreshToken($refreshToken);
-    }
-
-    /**
      * @param $clientRefreshToken
-     * @return bool|AuthToken
-     * @throws \Exception
+     * @return AuthToken
+     * @throws Exception
      */
-    public function refresh($clientRefreshToken)
+    public function refresh($clientRefreshToken): AuthToken
     {
         $validRefreshToken = $this->_getRefreshToken($clientRefreshToken);
 
-        if (
-            empty($validRefreshToken) ||
-            $validRefreshToken->isExpired() ||
-            ($validRefreshToken->getIpAddress() != \Request::ip())
-        ) {
+        if (empty($validRefreshToken) || $validRefreshToken->isExpired()) {
             throw new KolayAuthException('Invalid login information, please log in again.', 401);
         }
 
@@ -136,7 +121,7 @@ class Cache extends DriverAbstract implements DriverInterface
      * @param $token
      * @return bool
      */
-    public function invalidate($token)
+    public function invalidate($token): bool
     {
         return $this->getCache()->destroy($token);
     }
