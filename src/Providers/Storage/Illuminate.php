@@ -3,21 +3,17 @@
 namespace KolayIK\Auth\Providers\Storage;
 
 use Illuminate\Contracts\Cache\Repository as CacheContract;
+use Psr\SimpleCache\InvalidArgumentException;
 
+/**
+ * Class Illuminate
+ * @package KolayIK\Auth\Providers\Storage
+ */
 class Illuminate implements StorageInterface
 {
-    /**
-     * The cache repository contract.
-     *
-     * @var \Illuminate\Contracts\Cache\Repository
-     */
+    /** @var CacheContract */
     protected $cache;
 
-    /**
-     * The used cache tag.
-     *
-     * @var string
-     */
     const TOKEN_PREFIX = 'kolayik.kolayauth.';
     const REFRESH_TOKEN_PREFIX = 'kolayik.kolayauth.refresh.';
 
@@ -63,6 +59,7 @@ class Illuminate implements StorageInterface
      * @param  string  $key
      *
      * @return mixed
+     * @throws InvalidArgumentException
      */
     public function get($prefix, $key)
     {
@@ -76,7 +73,7 @@ class Illuminate implements StorageInterface
      *
      * @return bool
      */
-    public function destroy($key)
+    public function destroy($key): bool
     {
         return $this->cache()->forget(self::TOKEN_PREFIX . $key);
     }
@@ -94,9 +91,9 @@ class Illuminate implements StorageInterface
     /**
      * Return the cache instance with tags attached.
      *
-     * @return \Illuminate\Contracts\Cache\Repository
+     * @return CacheContract
      */
-    protected function cache()
+    protected function cache(): CacheContract
     {
         return $this->cache;
     }

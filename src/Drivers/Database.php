@@ -3,19 +3,25 @@
 namespace KolayIK\Auth\Drivers;
 
 use Carbon\Carbon;
+use Exception;
 use KolayIK\Auth\Entity\AuthToken;
 use KolayIK\Auth\Entity\RefreshToken;
 use KolayIK\Auth\Exceptions\KolayAuthException;
 use KolayIK\Auth\Exceptions\TokenInvalidException;
 use KolayIK\Auth\Model;
 
-class Database extends DriverAbstract implements DriverInterface
+/**
+ * Class Database
+ *
+ * @package KolayIK\Auth\Drivers
+ */
+class Database extends DriverAbstract
 {
     /**
      * @param $data
      * @return AuthToken
      */
-    private function _map($data)
+    private function _map($data): AuthToken
     {
         $authToken = new AuthToken();
         $authToken->setExpirationDate(new Carbon($data->expiration_date));
@@ -24,7 +30,7 @@ class Database extends DriverAbstract implements DriverInterface
         $authToken->setCreatedAt(new Carbon($data->created_at));
         $authToken->setUpdatedAt(new Carbon($data->updated_at));
 
-        if (!empty($data->ip_address)) {
+        if (! empty($data->ip_address)) {
             $authToken->setIpAddress($data->ip_address);
         }
 
@@ -34,7 +40,7 @@ class Database extends DriverAbstract implements DriverInterface
     /**
      * @param AuthToken $data
      * @return bool|Model\AuthToken
-     * @throws \Exception
+     * @throws Exception
      */
     private function _save(AuthToken $data)
     {
@@ -47,7 +53,7 @@ class Database extends DriverAbstract implements DriverInterface
         $model->user_id = $data->getUserId();
         $model->expiration_date = $data->getExpirationDate();
 
-        if (!$model->save()) {
+        if (! $model->save()) {
             return false;
         }
 
@@ -56,15 +62,16 @@ class Database extends DriverAbstract implements DriverInterface
 
     /**
      * @param RefreshToken $data
-     * @return bool|Model\RefreshToken
-     * @throws \Exception
+     * @return RefreshToken
+     *
+     * @throws KolayAuthException
      */
-    private function _saveRefreshToken(RefreshToken $data)
+    public function saveRefreshToken(RefreshToken $data): RefreshToken
     {
         if (empty($data)) {
             throw new KolayAuthException('Data can not be empty');
         }
-        
+
         $model = new Model\AuthToken();
         $model->token = $data->getRefreshToken();
         $model->user_id = $data->getUserId();
@@ -73,8 +80,8 @@ class Database extends DriverAbstract implements DriverInterface
         $model->created_at = $data->getCreatedAt();
         $model->updated_at = $data->getUpdatedAt();
 
-        if (!$model->save()) {
-            return false;
+        if (! $model->save()) {
+            throw new KolayAuthException('Data can not be save');
         }
 
         return $data;
@@ -84,7 +91,7 @@ class Database extends DriverAbstract implements DriverInterface
      * @param $token
      * @return Model\AuthToken
      */
-    private function _get($token)
+    private function _get($token): Model\AuthToken
     {
         return Model\AuthToken::where('token', $token)->first();
     }
@@ -92,26 +99,28 @@ class Database extends DriverAbstract implements DriverInterface
     /**
      * @param $token
      * @return AuthToken
-     * @throws \Exception
+     * @throws Exception
      */
-    public function get($token)
+    public function get($token): AuthToken
     {
         $data = $this->_get($token);
-        if (!$data instanceof Model\AuthToken || empty($data)) {
+        if (! $data instanceof Model\AuthToken || empty($data)) {
             throw new TokenInvalidException('Token not found!');
         }
+
         return $this->_map($data);
     }
 
     /**
      * @param $userId
-     * @return bool|AuthToken
+     * @return AuthToken
+     * @throws Exception
      */
-    public function generate($userId)
+    public function generate($userId): AuthToken
     {
         $authToken = new AuthToken();
         $authToken->setUserId($userId);
-        $authToken->setToken(parent::generateToken());
+        $authToken->setToken($this->generateToken());
         $authToken->setExpirationDate(Carbon::now()->addMinutes($this->getTTL()));
 
         return $this->_map($this->_save($authToken));
@@ -119,18 +128,15 @@ class Database extends DriverAbstract implements DriverInterface
 
     /**
      * @param $clientRefreshToken
-     * @return bool|AuthToken
-     * @throws \Exception
+     * @return AuthToken
+     * @throws KolayAuthException
+     * @throws Exception
      */
-    public function refresh($clientRefreshToken)
+    public function refresh($clientRefreshToken): AuthToken
     {
         $validRefreshToken = $this->get($clientRefreshToken);
 
-        if (
-            empty($validRefreshToken) ||
-            $validRefreshToken->isExpired() ||
-            ($validRefreshToken->getIpAddress() != \Request::ip())
-        ) {
+        if (empty($validRefreshToken) || $validRefreshToken->isExpired()) {
             throw new KolayAuthException('Invalid login information, please log in again.', 401);
         }
 
@@ -138,31 +144,11 @@ class Database extends DriverAbstract implements DriverInterface
     }
 
     /**
-     * @param $userId
-     * @return bool|RefreshToken
-     */
-    public function generateRefreshToken($userId)
-    {
-        $refreshToken = new RefreshToken();
-        $refreshToken->setRefreshToken(parent::generateToken());
-        $refreshToken->setIpAddress(\Request::ip());
-        $refreshToken->setUserId($userId);
-
-        $now = Carbon::now();
-        $expirationDate = clone $now;
-        $refreshToken->setExpirationDate($expirationDate->addMinutes($this->getRefreshTTL()));
-        $refreshToken->setCreatedAt($now);
-        $refreshToken->setUpdatedAt($now);
-
-        return $this->_saveRefreshToken($refreshToken);
-    }
-
-    /**
      * @param $token
      * @return bool
      */
-    public function invalidate($token)
+    public function invalidate($token): bool
     {
-        return Model\AuthToken::where('token', $token)->delete();
+        return Model\AuthToken::query()->where('token', $token)->delete();
     }
 }

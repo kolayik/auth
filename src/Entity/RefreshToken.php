@@ -117,4 +117,18 @@ class RefreshToken
     {
         return Carbon::now()->gte($this->getExpirationDate());
     }
+
+    /**
+     * @return array
+     */
+    public function toArray():array {
+        return [
+            'refreshToken' => $this->refreshToken,
+            'userId' => $this->userId,
+            'ipAddress' => $this->ipAddress,
+            'expirationDate' => $this->expirationDate,
+            'createdAt' => $this->createdAt,
+            'updatedAt' => $this->updatedAt,
+        ];
+    }
 }

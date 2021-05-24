@@ -2,7 +2,9 @@
 
 namespace KolayIK\Auth\Test\Drivers;
 
-use KolayIK\Auth\Drivers\DriverAbstract;
+use KolayIK\Auth\Drivers\Cache;
+use KolayIK\Auth\Logger\AuthLogger;
+use KolayIK\Auth\Providers\Storage\Illuminate;
 use KolayIK\Auth\Test\AbstractTestCase;
 
 use Illuminate\Contracts\Cache\Repository as CacheContract;
@@ -15,7 +17,7 @@ class DriverAbstractTest extends AbstractTestCase
     {
         $cacheContract = Mockery::mock(CacheContract::class);
 
-        $driverAbstract = new DriverAbstract();
+        $driverAbstract = new Cache(new AuthLogger(false));
         $driverAbstract->setCache($cacheContract);
         $driverAbstract->setConfig([
             'ttl' => 2000

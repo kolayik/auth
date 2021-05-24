@@ -17,7 +17,7 @@ class KolayAuth
 
     /**
      * @param $userId
-     * @return AuthToken
+     * @return array
      */
     public static function generate($userId)
     {

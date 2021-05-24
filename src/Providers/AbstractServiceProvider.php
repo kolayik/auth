@@ -2,8 +2,8 @@
 
 namespace KolayIK\Auth\Providers;
 
+use Exception;
 use Illuminate\Support\ServiceProvider;
-
 use KolayIK\Auth\Authorizer;
 use KolayIK\Auth\Drivers\DriverInterface;
 use KolayIK\Auth\Http\Middleware\Authenticate;
@@ -14,7 +14,7 @@ use KolayIK\Auth\Http\Parser\InputSource;
 use KolayIK\Auth\Http\Parser\Parser;
 use KolayIK\Auth\Http\Parser\QueryString;
 use KolayIK\Auth\Http\Parser\RouteParams;
-use KolayIK\Auth\Providers\Auth\AuthInterface;
+use KolayIK\Auth\Logger\AuthLogger;
 use KolayIK\Auth\Providers\Storage\StorageInterface;
 
 abstract class AbstractServiceProvider extends ServiceProvider
@@ -26,7 +26,7 @@ abstract class AbstractServiceProvider extends ServiceProvider
      */
     protected $middlewareAliases = [
         'kolay.auth' => Authenticate::class,
-        'kolay.refresh' => RefreshToken::class
+        'kolay.refresh' => RefreshToken::class,
     ];
 
     /**
@@ -46,6 +46,7 @@ abstract class AbstractServiceProvider extends ServiceProvider
         $this->registerCacheProvider();
         $this->registerAliases();
 
+        $this->registerLogger();
         $this->registerDriver();
         $this->registerTokenParser();
         $this->registerManager();
@@ -68,11 +69,7 @@ abstract class AbstractServiceProvider extends ServiceProvider
     {
         // create image
         $this->app->singleton(Authorizer::class, function ($app) {
-            return new Authorizer(
-                $this->getAllConfig(),
-                $app['kolay-auth-parser'],
-                $app['kolay-auth-driver']
-            );
+            return new Authorizer($this->getAllConfig(), $app['kolay-auth-parser'], $app['kolay-auth-driver']);
         });
     }
 
@@ -83,11 +80,10 @@ abstract class AbstractServiceProvider extends ServiceProvider
     private function _getDriver($driverName)
     {
         if (is_string($driverName)) {
-            $driverClass = sprintf('KolayIK\\Auth\\Drivers\\%s', $driverName);
+            $driverClass = $this->getConfig('drivers.'.$driverName);
 
             if (class_exists($driverClass)) {
-                $driver = new $driverClass();
-                return $driver;
+                return new $driverClass($this->app['kolay-auth-logger']);
             }
         }
 
@@ -109,20 +105,33 @@ abstract class AbstractServiceProvider extends ServiceProvider
     /**
      * Register the bindings for the Driver.
      */
+    protected function registerLogger()
+    {
+        $this->app->singleton('kolay-auth-logger', function ($app) {
+            $loggerStatus = (bool) $this->getConfig('logger_status');
+
+            return (new AuthLogger($loggerStatus));
+        });
+    }
+
+    /**
+     * Register the bindings for the Driver.
+     */
     protected function registerDriver()
     {
         // create image
         $this->app->singleton('kolay-auth-driver', function ($app) {
-            $driverName = ucfirst($this->getConfig('driver'));
+            $driverName = $this->getConfig('driver');
             $driverClass = $this->_getDriver($driverName);
 
             if ($driverClass) {
                 $driverClass->setCache($this->app['kolay-auth-provider-cache']);
                 $driverClass->setConfig($this->getAllConfig());
+
                 return $driverClass;
             }
 
-            throw new \Exception("Driver ({$driverName}) could not be instantiated");
+            throw new Exception("Driver ({$driverName}) could not be instantiated");
         });
     }
 
@@ -134,16 +143,13 @@ abstract class AbstractServiceProvider extends ServiceProvider
     protected function registerTokenParser()
     {
         $this->app->singleton('kolay-auth-parser', function ($app) {
-            $parser = new Parser(
-                $app['request'],
-                [
-                    new AuthHeaders(),
-                    new QueryString(),
-                    new InputSource(),
-                    new RouteParams(),
-                    new Cookies(),
-                ]
-            );
+            $parser = new Parser($app['request'], [
+                new AuthHeaders(),
+                new QueryString(),
+                new InputSource(),
+                new RouteParams(),
+                new Cookies(),
+            ]);
 
             $app->refresh('request', $parser, 'setRequest');
 
@@ -162,8 +168,8 @@ abstract class AbstractServiceProvider extends ServiceProvider
     /**
      * Helper to get the config values.
      *
-     * @param  string $key
-     * @param  string $default
+     * @param string $key
+     * @param string $default
      *
      * @return mixed
      */
@@ -175,9 +181,9 @@ abstract class AbstractServiceProvider extends ServiceProvider
     /**
      * Get an instantiable configuration instance.
      *
-     * @param  string  $key
-     *
+     * @param string $key
      * @return mixed
+     * @throws \Illuminate\Contracts\Container\BindingResolutionException
      */
     protected function getConfigInstance($key)
     {

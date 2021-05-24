@@ -117,4 +117,19 @@ class AuthToken
     {
         return Carbon::now()->gte($this->getExpirationDate());
     }
+
+
+    /**
+     * @return array
+     */
+    public function toArray():array {
+        return [
+            'token' => $this->token,
+            'userId' => $this->userId,
+            'ipAddress' => $this->ipAddress,
+            'expirationDate' => $this->expirationDate,
+            'createdAt' => $this->createdAt,
+            'updatedAt' => $this->updatedAt,
+        ];
+    }
 }
