@@ -1,7 +1,12 @@
 {
     "name": "kolayik/auth",
     "description": "Kolay Auth",
-    "keywords": ["laravel jwt auth", "laravel", "jwt", "json web token"],
+    "keywords": [
+        "laravel jwt auth",
+        "laravel",
+        "jwt",
+        "json web token"
+    ],
     "type": "library",
     "authors": [
         {
@@ -10,16 +15,16 @@
         }
     ],
     "require": {
-        "php": "^7.3|^8.0|^8.1",
-        "illuminate/auth": "^8.0|^9.0|^10.0",
-        "illuminate/contracts": "^8.0|^9.0|^10.0",
-        "illuminate/http": "^5.0|^6.0|^7.0|^8.0|^9.0|^10.0",
-        "illuminate/support": "^8.0|^9.0|^10.0"
+        "php": "^7.3|^8.0|^8.1|^8.2|^8.3",
+        "illuminate/auth": "^8.0|^9.0|^10.0|^11.0",
+        "illuminate/contracts": "^8.0|^9.0|^10.0|^11.0",
+        "illuminate/http": "^5.0|^6.0|^7.0|^8.0|^9.0|^10.0|^11.0",
+        "illuminate/support": "^8.0|^9.0|^10.0|^11.0"
     },
     "require-dev": {
-        "illuminate/console": "^8.0|^9.0|^10.0",
-        "illuminate/database": "^8.0|^9.0|^10.0",
-        "illuminate/routing": "^8.0|^9.0|^10.0",
+        "illuminate/console": "^8.0|^9.0|^10.0|^11.0",
+        "illuminate/database": "^8.0|^9.0|^10.0|^11.0",
+        "illuminate/routing": "^8.0|^9.0|^10.0|^11.0",
         "mockery/mockery": "^1.4",
         "phpunit/phpunit": "^10.0"
     },
